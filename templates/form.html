@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AMR Naive Bayes Prediction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Open Sans", sans-serif;
+            color: #333;
+            background: #bbb9b9;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #032B44;
+            padding: 10px 30px;
+            color: white;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-nav a {
+            margin: 0 15px;
+            color: rgb(241, 238, 238);
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header-nav a:hover {
+            background-color: #0b22ee;
+        }
+
+        .signup-container {
+            display: flex;
+            flex-direction: row;
+            max-width: 1300px;
+            margin: 1rem auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 100px;
+            background: white;
+        }
+
+        .welcome-section {
+            width: 500px;
+            height: 650px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #001F3F, #FF8C00);
+            color: #fff;
+            text-align: center;
+            padding: 1rem;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            overflow: hidden;
+            position: fixed;
+            top: 100px;
+            left: calc((100% - 1300px) / 2);
+        }
+
+        .welcome-section h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-section img {
+            width: 80%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+        }
+
+        .form-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff;
+            padding: 2rem;
+            border-top-right-radius: 20px;
+            border-bottom-right-radius: 20px;
+            margin-left: 500px;
+        }
+
+        form {
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 700px;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-header {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #6c00ff;
+        }
+
+        form input[type="text"],
+        form input[type="number"],
+        form select {
+            width: 100%;
+            padding: 14px;
+            margin: 5px 0 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        form input:focus,
+        form select:focus {
+            border-color: #6c00ff;
+        }
+
+        form button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #001F3F, #FF8C00);
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        form button:hover {
+            opacity: 0.8;
+        }
+
+        .prediction-result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+        }
+
+        .error-message {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fce8e6;
+            border-left: 4px solid #e74c3c;
+            border-radius: 4px;
+            color: #c0392b;
+        }
+
+        @media (max-width: 768px) {
+            .signup-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .welcome-section {
+                flex: none;
+                height: 400px;
+                padding: 1.5rem;
+                border-radius: 20px 20px 0 0;
+                position: static;
+                width: 100%;
+                left: 0;
+            }
+
+            .form-section {
+                flex: none;
+                padding: 1.5rem;
+                border-radius: 0 0 20px 20px;
+                margin-left: 0;
+            }
+
+            form {
+                max-width: 90%;
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <nav class="header-nav">
+        <a href="#">Home</a>
+        <a href="#">Logout</a>
+    </nav>
+</header>
+
+<div class="signup-container">
+    <!-- Welcome Side -->
+    <div class="welcome-section">
+        <h1>WELCOME TO DIGAMS AI </h1>
+        <img src="static\digams.jpg" alt="Medical Image">
+    </div>
+
+    <!-- Form Side -->
+    <div class="form-section">
+        <form action="/predict" method="post">
+            <div class="form-header">Enter Patient & Sample Info</div>
+
+            {% if error %}
+                <div class="error-message">
+                    <strong>Error:</strong> {{ error }}
+                </div>
+            {% endif %}
+
+            <select name="Species" id="Species" required>
+                <option value="">Select Species</option>
+                {% for option in species_options %}
+                    <option value="{{ option }}" {% if input_data and input_data.Species == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="Family" id="Family" required>
+                <option value="">Select Family</option>
+                {% for option in family_options %}
+                    <option value="{{ option }}" {% if input_data and input_data.Family == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="Country" id="Country" required>
+                <option value="">Select Country</option>
+                {% for option in country_options %}
+                    <option value="{{ option }}" {% if input_data and input_data.Country == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <input type="text" name="State" id="State" placeholder="Enter state (if applicable)" {% if input_data %}value="{{ input_data.State }}"{% endif %}>
+
+            <select name="Gender" id="Gender" required>
+                <option value="">Select Gender</option>
+                {% for option in gender_options %}
+                    <option value="{{ option }}" {% if input_data and input_data.Gender == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="Age.Group" id="Age.Group" required>
+                <option value="">Select Age Group</option>
+                {% for option in age_group_options %}
+                    <option value="{{ option }}" {% if input_data and input_data['Age.Group'] == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="Speciality" id="Speciality" required>
+                <option value="">Select Speciality</option>
+                {% for option in speciality_options %}
+                    <option value="{{ option }}" {% if input_data and input_data.Speciality == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="Source" id="Source" required>
+                <option value="">Select Source</option>
+                {% for option in source_options %}
+                    <option value="{{ option }}" {% if input_data and input_data.Source == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <input type="number" name="Year" id="Year" required placeholder="Enter year" {% if input_data %}value="{{ input_data.Year }}"{% endif %}>
+
+            <select name="Phenotype" id="Phenotype" required>
+                <option value="">Select Phenotype</option>
+                {% for option in phenotype_options %}
+                    <option value="{{ option }}" {% if input_data and input_data.Phenotype == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Predict</button>
+            
+            {% if prediction %}
+                <div class="form-header" style="margin-top: 20px; color: #001F3F;">
+                    Prediction: 
+                    {% if prediction == 'Resistant' or prediction == 1 %}
+                        <span style="color: #e74c3c;">Resistant</span>
+                    {% elif prediction == 'Intermediate' %}
+                        <span style="color: #f39c12;">Intermediate</span>
+                    {% elif prediction == 'Susceptible' or prediction == 0 %}
+                        <span style="color: #27ae60;">Susceptible</span>
+                    {% else %}
+                        {{ prediction }}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
