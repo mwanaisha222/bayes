@@ -69,10 +69,7 @@
             padding: 1rem;
             border-top-left-radius: 20px;
             border-bottom-left-radius: 20px;
-            overflow: hidden;
-            position: fixed;
-            top: 100px;
-            left: calc((100% - 1300px) / 2);
+            /* Removed position: fixed to allow scrolling */
         }
 
         .welcome-section h1 {
@@ -97,7 +94,7 @@
             padding: 2rem;
             border-top-right-radius: 20px;
             border-bottom-right-radius: 20px;
-            margin-left: 500px;
+            /* Removed margin-left that was compensating for fixed element */
         }
 
         form {
@@ -179,16 +176,13 @@
                 height: 400px;
                 padding: 1.5rem;
                 border-radius: 20px 20px 0 0;
-                position: static;
                 width: 100%;
-                left: 0;
             }
 
             .form-section {
                 flex: none;
                 padding: 1.5rem;
                 border-radius: 0 0 20px 20px;
-                margin-left: 0;
             }
 
             form {
